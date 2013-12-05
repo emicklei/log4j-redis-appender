@@ -68,22 +68,29 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 
 			if (key == null) throw new IllegalStateException("Must set 'key'");
 
-			if (executor == null) executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("RedisAppender"));
+			if (executor == null) executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory(this.getClass().getSimpleName()));
 
 			if (task != null && !task.isDone()) task.cancel(true);
-			if (jedis != null && jedis.isConnected()) jedis.disconnect();
-
+			
 			events = new ConcurrentLinkedQueue<LoggingEvent>();
 			batch = new byte[batchSize][];
 			messageIndex = 0;
 
-			jedis = new Jedis(host, port);
+			this.createJedis();
+			
 			task = executor.scheduleWithFixedDelay(this, period, period, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			LogLog.error("Error during activateOptions", e);
 		}
 	}
 
+	protected void createJedis() {
+	    if (jedis != null && jedis.isConnected()) {
+	        jedis.disconnect();
+	    }
+	    jedis = new Jedis(host, port);
+	}
+	
 	@Override
 	protected void append(LoggingEvent event) {
 		try {
@@ -114,22 +121,22 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 		}
 	}
 
-	private boolean connect() {
+	protected boolean connect() {
 		try {
 			if (!jedis.isConnected()) {
-				LogLog.debug("Connecting to Redis: " + host);
+				LogLog.debug("Connecting to Redis: " + host + ":" + port);
 				jedis.connect();
 
 				if (password != null) {
 					String result = jedis.auth(password);
 					if (!"OK".equals(result)) {
-						LogLog.error("Error authenticating with Redis: " + host);
+						LogLog.error("Error authenticating with Redis: " + host + ":" + port);
 					}
 				}
 			}
 			return true;
 		} catch (Exception e) {
-			LogLog.error("Error connecting to Redis server", e);
+			LogLog.error("Error connecting to Redis: " + host + ":" + port, e);
 			return false;
 		}
 	}
@@ -165,8 +172,8 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 		}
 	}
 
-	private void push() {
-		LogLog.debug("Sending " + messageIndex + " log messages to Redis");
+	protected void push() {
+		LogLog.debug("Sending " + messageIndex + " log messages to Redis: " + host + ":" + port);
 		jedis.rpush(SafeEncoder.encode(key),
 			batchSize == messageIndex
 				? batch
