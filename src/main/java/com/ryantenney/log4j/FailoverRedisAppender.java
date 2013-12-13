@@ -24,7 +24,7 @@ public class FailoverRedisAppender extends RedisAppender {
     }
 
     private HostPort[] shuffled;
-    private int shuffleIndex;
+    private int shuffleIndex = 0;
 
     @Override
     public void activateOptions() {
@@ -39,7 +39,6 @@ public class FailoverRedisAppender extends RedisAppender {
                 this.shuffled[h] = new HostPort(hostport[0], Integer.valueOf(hostport[1]));
             }
             this.shuffle(shuffled);
-            this.shuffleIndex = 2;
             super.activateOptions();
         } catch (Exception e) {
             LogLog.error("Error during activateOptions", e);
