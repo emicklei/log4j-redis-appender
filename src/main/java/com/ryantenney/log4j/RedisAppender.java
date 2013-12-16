@@ -113,11 +113,8 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 	@Override
 	public void close() {
 		try {
-		    LogLog.debug("Cancel task");
 			task.cancel(false);
-			LogLog.debug("Shutdown executor");
 			executor.shutdown();
-			LogLog.debug("Disconnect Redis");
 			jedis.disconnect();
 		} catch (Exception e) {
 			errorHandler.error(e.getMessage(), e, ErrorCode.CLOSE_FAILURE);
