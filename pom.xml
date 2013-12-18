@@ -27,6 +27,11 @@
             <email>ryan@10e.us</email>
             <timezone>-5</timezone>
         </developer>
+        <developer>
+            <name>Ernest Micklei</name>
+            <email>ernest.micklei@gmail.com</email>
+            <timezone>1</timezone>
+        </developer>        
     </developers>
 
     <licenses>

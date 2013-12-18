@@ -121,6 +121,17 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 		}
 	}
 
+	/**
+	 * Pre: jedis not null
+	 */
+	protected void safeDisconnect() {
+        try {
+            jedis.disconnect();
+        } catch (Exception e) {
+            LogLog.warn("Disconnect failed to Redis: " + host + ":" + port);
+        }	    
+	}
+	
 	protected boolean connect() {
 		try {
 			if (!jedis.isConnected()) {
@@ -168,8 +179,12 @@ public class RedisAppender extends AppenderSkeleton implements Runnable {
 
 			if (!alwaysBatch && messageIndex > 0) push();
 		} catch (Exception e) {
-			errorHandler.error(e.getMessage(), e, ErrorCode.WRITE_FAILURE);
+			this.handleWriteException(e);
 		}
+	}
+	
+	protected void handleWriteException(Exception ex) {
+	    errorHandler.error(ex.getMessage(), ex, ErrorCode.WRITE_FAILURE);
 	}
 
 	protected void push() {

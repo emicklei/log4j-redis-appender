@@ -52,7 +52,7 @@ public class RedisAppenderTest {
 
 		for (long i = 0; i < 1000; i++) {
 			log.debug("that's me " + i);
-			Thread.sleep(1000);
+			Thread.sleep(50);
 		}
 	}
 
