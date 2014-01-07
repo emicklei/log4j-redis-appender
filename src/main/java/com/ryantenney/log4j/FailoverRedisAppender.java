@@ -26,7 +26,6 @@ public class FailoverRedisAppender extends RedisAppender {
 
     private HostPort[] shuffled;
     private int shuffleIndex = 0;
-    private int retries = 0;
 
     @Override
     public void activateOptions() {
