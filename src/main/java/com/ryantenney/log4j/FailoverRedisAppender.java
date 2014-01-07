@@ -13,12 +13,6 @@ public class FailoverRedisAppender extends RedisAppender {
 
     // Settings
     private String endpoints = null; // comma separated host:port pairs
-    private int maxRetries = 10;
-    private int secondsBetweenRetry = 10;
-    
-    public void setSecondsBetweenRetry(int secondsBetweenRetryAll) {
-        this.secondsBetweenRetry = secondsBetweenRetryAll;
-    }
 
     public static class HostPort {
         String host;
@@ -53,26 +47,6 @@ public class FailoverRedisAppender extends RedisAppender {
         }
     }
     
-    @Override
-    protected void handleWriteException(Exception ex) {
-        this.safeDisconnect();
-        // immediate reconnect using existing host:port if that fails then try all before enterting the retry loop
-        while (!this.connect() && this.retries < this.maxRetries) {     
-            // here we tried all available host:ports
-            retries++;                       
-            // now wait and retry the whole list
-            try {
-                LogLog.debug("Wait before retry all hosts, attempt:"+retries);
-                Thread.sleep(this.secondsBetweenRetry * 1000);
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        }
-        if (this.retries == this.maxRetries) {
-            LogLog.debug("Giving up after attempt:"+maxRetries);
-        }
-    }
-    
     /**
      * Fisher–Yates shuffle
      * @param hplist
@@ -99,6 +73,7 @@ public class FailoverRedisAppender extends RedisAppender {
     @Override
     protected synchronized boolean connect() {
         int first = this.shuffleIndex;
+        this.createJedis();
         while (true) {            
             if (super.connect()) {
                 return true;
@@ -124,8 +99,4 @@ public class FailoverRedisAppender extends RedisAppender {
     public void setEndpoints(String endpoints) {
         this.endpoints = endpoints;
     }
-
-    public void setMaxRetries(int maxRetries) {
-        this.maxRetries = maxRetries;
-    }    
 }
