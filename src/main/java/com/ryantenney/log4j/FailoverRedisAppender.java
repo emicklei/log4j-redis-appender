@@ -71,9 +71,15 @@ public class FailoverRedisAppender extends RedisAppender {
     
     @Override
     protected synchronized boolean connect() {
+        // See if the first succeeds or we are still connected.
+        if (super.connect()) {
+            return true;
+        }
+        // change the endpoint config to the next
         int first = this.shuffleIndex;
         this.createJedis();
         while (true) {            
+            // again,attempt a connect and break if successful
             if (super.connect()) {
                 return true;
             }
