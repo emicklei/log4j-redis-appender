@@ -97,6 +97,13 @@ public class FailoverRedisAppender extends RedisAppender {
         }
     }
     
+    @Override
+    protected void handleWriteException(Exception ex) {
+        super.handleWriteException(ex);
+        // force a disconnect such that a connection attempt can be started with the next host (if any).
+        this.safeDisconnect();
+    }    
+    
     public String getEndpoints() {
         return endpoints;
     }
